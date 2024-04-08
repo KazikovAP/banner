@@ -1,6 +1,6 @@
 [![Go](https://img.shields.io/badge/-Go-464646?style=flat-square&logo=Go)](https://go.dev/)
 [![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-464646?style=flat-square&logo=PostgreSQL)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/-Redis-464646?style=flat-square&logo=Redis)](https://www.developer.redis.com/)
+[![Redis](https://img.shields.io/badge/-Redis-464646?style=flat-square&logo=Redis)](https://developer.redis.com/)
 [![docker](https://img.shields.io/badge/-Docker-464646?style=flat-square&logo=docker)](https://www.docker.com/)
 
 # banner
