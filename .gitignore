@@ -19,3 +19,12 @@
 
 # Go workspace file
 go.work
+
+# Custom
+/bin
+/vendor
+/vendor.pb
+/vendor.protogen
+/.idea
+/.vscode
+/env/.env
