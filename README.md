@@ -4,11 +4,11 @@
 [![docker](https://img.shields.io/badge/-Docker-464646?style=flat-square&logo=docker)](https://www.docker.com/)
 
 # banner
-# Сервис, показывающий пользователем баннеры
+# Сервис, показывающий пользователем баннеры, в зависимости от требуемой фичи и тега пользователя, а также управляемый баннерами и связанными с ними тегами и фичами.
 
 ---
 ## Технологии
-* Go 1.22.0
+* Golang 1.22.0
 * PostgreSQL
 * Cash Redis
 * REST API

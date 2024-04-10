@@ -30,13 +30,13 @@ type PostgresConfig struct {
 	Database string `yaml:"database"`
 }
 
-func LoadConfig() (Config, error) {
+func LoadConfig() (*Config, error) {
 	log.Println("start configuration setup")
 
 	configPath := os.Getenv("CONFIG_PATH")
 
 	if configPath == "" {
-		return Config{}, errors.New("CONFIG_PATH not found")
+		return &Config{}, errors.New("CONFIG_PATH not found")
 	}
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Fatal("Config file does not exist")
@@ -50,5 +50,5 @@ func LoadConfig() (Config, error) {
 
 	log.Println("configuration complete")
 
-	return cfg, nil
+	return &cfg, nil
 }

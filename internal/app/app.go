@@ -3,18 +3,18 @@ package app
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"banner/internal/config"
-	"banner/internal/handler"
-	api "banner/internal/http"
-	"banner/internal/repository"
+	"banner/internal/lib/logger"
+	"banner/internal/repo"
 	"banner/internal/repository/postgres"
+	"banner/internal/server/handlers"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 const (
@@ -33,41 +33,50 @@ func Run() error {
 
 	// Logger
 	log := setupLogger(cfg.Env)
-	log.Info("starting banner-server", slog.String("env", cfg.Env))
-	log.Debug("debug messages are enabled")
+	log.Info("Starting banner-server", slog.String("env", cfg.Env))
+	log.Debug("Debug messages are enabled")
 
 	// Setup connect to database
-	db, err := setupConnectToPostgres(cfg.Postgres)
+	db, err := setupConnectToPostgres(cfg, log)
 	if err != nil {
-		log.Error("failed to connect Postgres: %v", err)
+		log.Error("Failed to connect Postgres", logger.Err(err))
 		os.Exit(1)
 	}
 	defer db.Close()
 
-	service := handler.NewBannerService(db)
-	handler := api.NewHandler(service)
-
-	httpServer := setupServer(cfg.Server, handler)
-
-	log.Debug("starting HTTP server on %s", httpServer.Addr)
-
-	go func() {
-		if err := httpServer.ListenAndServe(); err != nil {
-			log.Error("failed listen and serve: %v", err)
-		}
-	}()
-
-	exit := make(chan os.Signal, 1)
-	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
-	<-exit
-
-	log.Debug("shutting down server")
-	if err := httpServer.Shutdown(context.Background()); err != nil {
-		return err
+	if err := db.Ping(context.Background()); err != nil {
+		log.Error("Failed to ping Postgres", logger.Err(err))
+		os.Exit(1)
+	} else {
+		log.Info("Connection to Postgres DB successfully")
 	}
-	if err := db.Close(context.Background()); err != nil {
-		return err
+	log.Info("Application started...", slog.String("env", cfg.Env))
+
+	// Router
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
+
+	ftr := repo.NewFeature(db.DB, log)
+	router.Post("/features", handlers.NewFeature(log, ftr))
+
+	log.Info("Starting server at", slog.String(cfg.Server.Host, cfg.Server.Port))
+	server := &http.Server{
+		Addr:         "localhost:8080",
+		Handler:      router,
+		ReadTimeout:  cfg.Server.Timeout,
+		WriteTimeout: cfg.Server.Timeout,
+		IdleTimeout:  cfg.Server.IdleTimeout,
 	}
+	if err := server.ListenAndServe(); err != nil {
+		log.Error("Failed to start server", logger.Err(err))
+	}
+
+	// Server TODO
 
 	return nil
 }
@@ -98,26 +107,15 @@ func setupLogger(env string) *slog.Logger {
 	return log
 }
 
-func setupConnectToPostgres(cfg config.PostgresConfig) (repository.BannerStorage, error) {
-	log.Println("setup storage")
+func setupConnectToPostgres(cfg *config.Config, log *slog.Logger) (*postgres.Postgres, error) {
+	connection := fmt.Sprintf("host=%s port=%s user=%s password=%s database=%s",
+		cfg.Postgres.Host,
+		cfg.Postgres.Port,
+		cfg.Postgres.User,
+		cfg.Postgres.Password,
+		cfg.Postgres.Database)
 
-	storage := fmt.Sprintf("host=%s port=%s user=%s password=%s db=%s",
-		cfg.Host,
-		cfg.Port,
-		cfg.User,
-		cfg.Password,
-		cfg.Database)
+	db, err := postgres.NewPostgres(context.Background(), connection, log)
 
-	return postgres.NewPostgres(storage)
-}
-
-func setupServer(cfg config.ServerConfig, handler *api.Handler) *http.Server {
-	log.Println("setup HTTP server")
-
-	router := api.Router(handler)
-
-	return &http.Server{
-		Addr:    fmt.Sprintf("[::]:%s", cfg.Port),
-		Handler: router,
-	}
+	return db, err
 }

@@ -1,15 +1,13 @@
 package models
 
-type CreateBanner struct {
-	TagID     []string
-	FeatureID int
-	NewBanner struct{}
-	IsActive  bool
-}
+import "time"
 
-type GetAllBanners struct {
-	TagID     string
-	FeatureID string
-	Limit     string
-	Offset    string
+type Banner struct {
+	ID        int                    `json:"banner_id"`
+	TagIDs    []int                  `json:"tag_ids"`
+	FeatureID int                    `json:"feature_id"`
+	Content   map[string]interface{} `json:"content"`
+	IsActive  bool                   `json:"is_active"`
+	CreatedAt time.Time              `json:"created_at"`
+	UpdatedAt time.Time              `json:"updated_at"`
 }
