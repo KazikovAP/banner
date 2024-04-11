@@ -22,7 +22,7 @@
 ### Экспорировать путь до конфига
 `export CONFIG_PATH="<path>\banner\config\config.yaml"` 
 
-### Запуск приложения в хранилище in-memory
+### Запуск приложения
 `go run cmd/banner/main.go`
 
 ---
