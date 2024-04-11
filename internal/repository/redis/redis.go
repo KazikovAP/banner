@@ -1,8 +1,8 @@
-package cashredis
+package redis
 
 import "github.com/go-redis/redis"
 
-type CashRedis struct {
+type Redis struct {
 	Cash *redis.Client
 }
 
@@ -10,7 +10,7 @@ type CashBannerActions interface {
 	CashGetUserBanner() (struct{}, error)
 }
 
-func NewCashRedis() (*CashRedis, error) {
+func NewCashRedis() (*Redis, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
@@ -22,7 +22,7 @@ func NewCashRedis() (*CashRedis, error) {
 		return nil, err
 	}
 
-	return &CashRedis{
+	return &Redis{
 		Cash: rdb,
 	}, nil
 }

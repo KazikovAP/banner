@@ -1,4 +1,4 @@
-package logger
+package errors
 
 import "log/slog"
 

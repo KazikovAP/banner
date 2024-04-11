@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"banner/internal/lib/logger"
+	logerr "banner/internal/lib/logger/logerr"
 	"context"
 	"fmt"
 	"log/slog"
@@ -23,7 +23,7 @@ func NewPostgres(ctx context.Context, cont string, log *slog.Logger) (*Postgres,
 	pgOnce.Do(func() {
 		db, err := pgxpool.New(ctx, cont)
 		if err != nil {
-			fmt.Errorf("Cannot to create connection pool", logger.Err(err))
+			fmt.Errorf("Cannot to create connection pool", logerr.Err(err))
 			return
 		}
 
@@ -48,7 +48,7 @@ func CreateTable(ctx context.Context, db *pgxpool.Pool, log *slog.Logger) error 
 		)
 	`)
 	if err != nil {
-		return fmt.Errorf("Failed to create banners table", logger.Err(err))
+		return fmt.Errorf("Failed to create banners table", logerr.Err(err))
 	}
 
 	_, err = db.Exec(ctx, `
@@ -58,7 +58,7 @@ func CreateTable(ctx context.Context, db *pgxpool.Pool, log *slog.Logger) error 
 		)
 	`)
 	if err != nil {
-		return fmt.Errorf("Failed to create tags table", logger.Err(err))
+		return fmt.Errorf("Failed to create tags table", logerr.Err(err))
 	}
 
 	_, err = db.Exec(ctx, `
@@ -71,7 +71,7 @@ func CreateTable(ctx context.Context, db *pgxpool.Pool, log *slog.Logger) error 
 		)
 	`)
 	if err != nil {
-		return fmt.Errorf("Failed to create banner_tags table", logger.Err(err))
+		return fmt.Errorf("Failed to create banner_tags table", logerr.Err(err))
 	}
 
 	_, err = db.Exec(ctx, `
@@ -81,7 +81,7 @@ func CreateTable(ctx context.Context, db *pgxpool.Pool, log *slog.Logger) error 
 		)
 	`)
 	if err != nil {
-		return fmt.Errorf("Failed to create features table", logger.Err(err))
+		return fmt.Errorf("Failed to create features table", logerr.Err(err))
 	}
 
 	_, err = db.Exec(ctx, `
@@ -93,7 +93,7 @@ func CreateTable(ctx context.Context, db *pgxpool.Pool, log *slog.Logger) error 
 		)
 	`)
 	if err != nil {
-		return fmt.Errorf("Failed to create users table", logger.Err(err))
+		return fmt.Errorf("Failed to create users table", logerr.Err(err))
 	}
 
 	return nil

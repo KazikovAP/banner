@@ -8,10 +8,16 @@ import (
 	"os"
 
 	"banner/internal/config"
-	"banner/internal/lib/logger"
+	middlewares "banner/internal/lib/api/middlewares"
+	jwt "banner/internal/lib/auth/jwt"
+	logerr "banner/internal/lib/logger/logerr"
 	"banner/internal/repo"
 	"banner/internal/repository/postgres"
-	"banner/internal/server/handlers"
+	"banner/internal/server/handlers/banners"
+	"banner/internal/server/handlers/features"
+	"banner/internal/server/handlers/tags"
+	login "banner/internal/server/handlers/users/login"
+	users "banner/internal/server/handlers/users/user"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -39,13 +45,13 @@ func Run() error {
 	// Setup connect to database
 	db, err := setupConnectToPostgres(cfg, log)
 	if err != nil {
-		log.Error("Failed to connect Postgres", logger.Err(err))
+		log.Error("Failed to connect Postgres", logerr.Err(err))
 		os.Exit(1)
 	}
 	defer db.Close()
 
 	if err := db.Ping(context.Background()); err != nil {
-		log.Error("Failed to ping Postgres", logger.Err(err))
+		log.Error("Failed to ping Postgres", logerr.Err(err))
 		os.Exit(1)
 	} else {
 		log.Info("Connection to Postgres DB successfully")
@@ -62,8 +68,29 @@ func Run() error {
 	router.Use(middleware.URLFormat)
 
 	ftr := repo.NewFeature(db.DB, log)
-	router.Post("/features", handlers.NewFeature(log, ftr))
+	router.Post("/features", features.NewFeature(log, ftr))
 
+	tg := repo.NewTag(db.DB, log)
+	router.Post("/tags", tags.NewTag(log, tg))
+
+	us := repo.NewUser(db.DB, log)
+	router.Post("/users", users.NewUser(log, us))
+
+	jwt := jwt.NewJWTSecret(cfg.Jwt.Secret, log)
+	router.Post("/login", login.Login(log, us, jwt))
+
+	router.With(func(next http.Handler) http.Handler {
+		return middlewares.TokenAuthMiddleware(jwt, next)
+	}).Post("/tags", tags.NewTag(log, tg))
+
+	br := repo.NewBanner(db.DB, log)
+	btr := repo.NewBannerTag(db.DB, log)
+
+	router.With(func(next http.Handler) http.Handler {
+		return middlewares.TokenAuthAndRoleMiddleware(jwt, next)
+	}).Post("/banners", banners.NewBanner(log, br, btr))
+
+	// Server
 	log.Info("Starting server at", slog.String(cfg.Server.Host, cfg.Server.Port))
 	server := &http.Server{
 		Addr:         "localhost:8080",
@@ -73,10 +100,8 @@ func Run() error {
 		IdleTimeout:  cfg.Server.IdleTimeout,
 	}
 	if err := server.ListenAndServe(); err != nil {
-		log.Error("Failed to start server", logger.Err(err))
+		log.Error("Failed to start server", logerr.Err(err))
 	}
-
-	// Server TODO
 
 	return nil
 }

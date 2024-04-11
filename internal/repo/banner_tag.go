@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"banner/internal/lib/logger"
+	logerr "banner/internal/lib/logger/logerr"
 	"banner/internal/models"
 	"context"
 	"log/slog"
@@ -21,35 +21,35 @@ func NewBannerTag(db *pgxpool.Pool, log *slog.Logger) *BannerTagRepo {
 func (bt *BannerTagRepo) CreateBannerTag(ctx context.Context, bannerTag *models.BannerTag) error {
 	_, err := bt.db.Exec(ctx, `INSERT INTO banner_tags (banner_id, tag_id) VALUES ($1, $2)`, bannerTag.BannerID, bannerTag.TagID)
 	if err != nil {
-		bt.log.Error("Failed to create BannerTag", logger.Err(err))
+		bt.log.Error("Failed to create BannerTag", logerr.Err(err))
 		return err
 	}
 
 	return nil
 }
 
-func (bt *BannerTagRepo) FindBannerTagsBannerID(ctx context.Context, bannerID int) ([]models.BannerTag, error) {
-	order, err := bt.db.Query(ctx, `SELECT * FROM banner_tags WHERE banner_id = $1`, bannerID)
+func (bt *BannerTagRepo) FindBannerTagBannerID(ctx context.Context, bannerID int) ([]models.BannerTag, error) {
+	rows, err := bt.db.Query(ctx, `SELECT * FROM banner_tags WHERE banner_id = $1`, bannerID)
 	if err != nil {
-		bt.log.Error("Failed to find BannerTags by Banner ID", logger.Err(err))
+		bt.log.Error("Failed to find BannerTags by Banner ID", logerr.Err(err))
 		return nil, err
 	}
-	defer order.Close()
+	defer rows.Close()
 
-	var result []models.BannerTag
-	for order.Next() {
-		var res models.BannerTag
-		if err := order.Scan(&res.BannerID, &res.TagID); err != nil {
-			bt.log.Error("Failed to scan BannerTag", logger.Err(err))
+	var bannerTags []models.BannerTag
+	for rows.Next() {
+		var bannerTag models.BannerTag
+		if err := rows.Scan(&bannerTag.BannerID, &bannerTag.TagID); err != nil {
+			bt.log.Error("Failed to scan BannerTag row", logerr.Err(err))
 			return nil, err
 		}
-		result = append(result, res)
+		bannerTags = append(bannerTags, bannerTag)
 	}
 
-	if err := order.Err(); err != nil {
-		bt.log.Error("Error occurred while iterating BannerTag", logger.Err(err))
+	if err := rows.Err(); err != nil {
+		bt.log.Error("Error occurred while iterating BannerTag rows", logerr.Err(err))
 		return nil, err
 	}
 
-	return result, nil
+	return bannerTags, nil
 }

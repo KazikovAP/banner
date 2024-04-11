@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"banner/internal/lib/logger"
+	logerr "banner/internal/lib/logger/logerr"
 	"banner/internal/models"
 	"context"
 	"log/slog"
@@ -19,12 +19,12 @@ func NewBanner(db *pgxpool.Pool, log *slog.Logger) *BannerRepo {
 }
 
 func (b *BannerRepo) CreateBanner(ctx context.Context, banner *models.Banner) error {
-	_, err := b.db.Exec(ctx,
-		`INSERT INTO banners (feature_id, content, is_active, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)`,
-		banner.FeatureID, banner.Content, banner.IsActive, banner.CreatedAt, banner.UpdatedAt)
+	err := b.db.QueryRow(ctx,
+		`INSERT INTO banners (feature_id, content, is_active, created_at, updated_at) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+		banner.FeatureID, banner.Content, banner.IsActive, banner.CreatedAt, banner.UpdatedAt).Scan(&banner.ID)
 
 	if err != nil {
-		b.log.Error("Failed to create banner", logger.Err(err))
+		b.log.Error("Failed to create banner", logerr.Err(err))
 		return err
 	}
 
@@ -34,73 +34,73 @@ func (b *BannerRepo) CreateBanner(ctx context.Context, banner *models.Banner) er
 func (b *BannerRepo) FindBannerId(ctx context.Context, id int) (models.Banner, error) {
 	query, err := b.db.Query(ctx, `SELECT * FROM banners WHERE id = $1`, id)
 	if err != nil {
-		b.log.Error("Banner not found", logger.Err(err))
+		b.log.Error("Banner not found", logerr.Err(err))
 		return models.Banner{}, err
 	}
 	defer query.Close()
 
-	order := models.Banner{}
+	resultArray := models.Banner{}
 	for query.Next() {
-		err := query.Scan(&order.ID, &order.FeatureID, &order.Content, &order.IsActive, &order.CreatedAt, &order.UpdatedAt)
+		err := query.Scan(&resultArray.ID, &resultArray.FeatureID, &resultArray.Content, &resultArray.IsActive, &resultArray.CreatedAt, &resultArray.UpdatedAt)
 		if err != nil {
-			b.log.Error("Banner not found", logger.Err(err))
+			b.log.Error("Banner not found", logerr.Err(err))
 			return models.Banner{}, err
 		}
 	}
 
-	return order, nil
+	return resultArray, nil
 }
 
-func (b *BannerRepo) FindBannerFeatureID(ctx context.Context, feature_id int) ([]models.Banner, error) {
+func (b *BannerRepo) FindBannersFeatureID(ctx context.Context, feature_id int) ([]models.Banner, error) {
 	query, err := b.db.Query(ctx, `SELECT * FROM banners WHERE feature_id = $1`, feature_id)
 	if err != nil {
-		b.log.Error("Error querying banners", logger.Err(err))
+		b.log.Error("Error querying banners", logerr.Err(err))
 		return nil, err
 	}
 	defer query.Close()
 
-	var result []models.Banner
+	var resultSlice []models.Banner
 	for query.Next() {
-		var order models.Banner
-		err := query.Scan(&order.ID, &order.FeatureID, &order.Content, &order.IsActive, &order.CreatedAt, &order.UpdatedAt)
+		var resultArray models.Banner
+		err := query.Scan(&resultArray.ID, &resultArray.FeatureID, &resultArray.Content, &resultArray.IsActive, &resultArray.CreatedAt, &resultArray.UpdatedAt)
 		if err != nil {
-			b.log.Error("Error scanning banners", logger.Err(err))
+			b.log.Error("Error scanning banners", logerr.Err(err))
 			return nil, err
 		}
-		result = append(result, order)
+		resultSlice = append(resultSlice, resultArray)
 	}
 
-	if len(result) == 0 {
+	if len(resultSlice) == 0 {
 		b.log.Info("No banners found for feature ID:", feature_id)
 		return []models.Banner{}, nil
 	}
 
-	return result, nil
+	return resultSlice, nil
 }
 
-func (b *BannerRepo) FindBannerTagID(ctx context.Context, tagId int) ([]models.Banner, error) {
+func (b *BannerRepo) FindBannersTagID(ctx context.Context, tagId int) ([]models.Banner, error) {
 	query, err := b.db.Query(ctx, `SELECT * FROM banner_tags WHERE tag_id = $1`, tagId)
 	if err != nil {
-		b.log.Error("Error querying banners", logger.Err(err))
+		b.log.Error("Error querying banners", logerr.Err(err))
 		return nil, err
 	}
 	defer query.Close()
 
-	var result []models.Banner
+	var resultSlice []models.Banner
 	for query.Next() {
-		var order models.Banner
-		err := query.Scan(&order.ID, &order.FeatureID, &order.Content, &order.IsActive, &order.CreatedAt, &order.UpdatedAt)
+		var resultArray models.Banner
+		err := query.Scan(&resultArray.ID, &resultArray.FeatureID, &resultArray.Content, &resultArray.IsActive, &resultArray.CreatedAt, &resultArray.UpdatedAt)
 		if err != nil {
-			b.log.Error("Error scanning banners", logger.Err(err))
+			b.log.Error("Error scanning banners", logerr.Err(err))
 			return nil, err
 		}
-		result = append(result, order)
+		resultSlice = append(resultSlice, resultArray)
 	}
 
-	if len(result) == 0 {
+	if len(resultSlice) == 0 {
 		b.log.Info("No banners found for tag ID:", tagId)
 		return []models.Banner{}, nil
 	}
 
-	return result, nil
+	return resultSlice, nil
 }

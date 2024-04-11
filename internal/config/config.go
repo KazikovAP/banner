@@ -13,6 +13,7 @@ type Config struct {
 	Env      string         `yaml:"env"`
 	Server   ServerConfig   `yaml:"server"`
 	Postgres PostgresConfig `yaml:"postgres"`
+	Jwt      JwtConfig      `yaml:"jwt"`
 }
 
 type ServerConfig struct {
@@ -28,6 +29,10 @@ type PostgresConfig struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
+}
+
+type JwtConfig struct {
+	Secret string `yaml:"secret"`
 }
 
 func LoadConfig() (*Config, error) {
