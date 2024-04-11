@@ -10,10 +10,11 @@
 ## Технологии
 * Golang 1.22.0
 * PostgreSQL
-* Cash Redis
+* Redis
 * REST API
 * Docker
 * Postman
+* JWT
 
 ---
 ## Взаимодейастиве с сервисом

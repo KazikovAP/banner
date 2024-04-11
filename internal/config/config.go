@@ -1,7 +1,7 @@
 package config
 
 import (
-	"errors"
+	logerr "banner/internal/lib/logger/logerr"
 	"log"
 	"os"
 	"time"
@@ -35,25 +35,30 @@ type JwtConfig struct {
 	Secret string `yaml:"secret"`
 }
 
+const (
+	localPathToConfig = "/config/config.yaml"
+)
+
 func LoadConfig() (*Config, error) {
-	log.Println("start configuration setup")
+	log.Println("Start configuration setup")
 
-	configPath := os.Getenv("CONFIG_PATH")
-
-	if configPath == "" {
-		return &Config{}, errors.New("CONFIG_PATH not found")
+	pwdPath, err := os.Getwd()
+	if err != nil {
+		log.Fatal("Can't get working directory path")
 	}
+
+	configPath := pwdPath + localPathToConfig
+
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Fatal("Config file does not exist")
+		log.Fatal("Config file does not exist ", logerr.Err(err))
 	}
 
 	var cfg Config
-	err := cleanenv.ReadConfig(configPath, &cfg)
-	if err != nil {
-		log.Fatal("cannot read config")
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+		log.Fatal("Cannot read config")
 	}
 
-	log.Println("configuration complete")
+	log.Println("Configuration complete")
 
 	return &cfg, nil
 }
