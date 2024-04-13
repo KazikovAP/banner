@@ -15,7 +15,7 @@ type FeatureRepo struct {
 	log *slog.Logger
 }
 
-func NewFeature(db *pgxpool.Pool, log *slog.Logger) *FeatureRepo {
+func NewFeatureRepo(db *pgxpool.Pool, log *slog.Logger) *FeatureRepo {
 	return &FeatureRepo{db, log}
 }
 

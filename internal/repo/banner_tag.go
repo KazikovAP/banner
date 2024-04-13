@@ -14,7 +14,7 @@ type BannerTagRepo struct {
 	log *slog.Logger
 }
 
-func NewBannerTag(db *pgxpool.Pool, log *slog.Logger) *BannerTagRepo {
+func NewBannerTagRepo(db *pgxpool.Pool, log *slog.Logger) *BannerTagRepo {
 	return &BannerTagRepo{db, log}
 }
 

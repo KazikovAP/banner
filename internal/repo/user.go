@@ -15,7 +15,7 @@ type UserRepo struct {
 	log *slog.Logger
 }
 
-func NewUser(db *pgxpool.Pool, log *slog.Logger) *UserRepo {
+func NewUserRepo(db *pgxpool.Pool, log *slog.Logger) *UserRepo {
 	return &UserRepo{db, log}
 }
 

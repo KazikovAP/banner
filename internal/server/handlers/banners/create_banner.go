@@ -33,7 +33,13 @@ type ResponseBanner struct {
 
 type Banners interface {
 	CreateBanner(ctx context.Context, banner *models.Banner) error
+	FindBannerFeatureTag(ctx context.Context, featureID, tagID int) (*models.Banner, error)
+	DeleteBannerID(ctx context.Context, id int) error
+	FindBannersParameters(ctx context.Context, params RequestGetBanners) ([]models.Banner, error)
+	UpdateBanner(ctx context.Context, banner *models.Banner) error
+	FindBannerId(ctx context.Context, id int) (models.Banner, error)
 }
+
 type BannerTags interface {
 	CreateBannerTag(ctx context.Context, bannerTag *models.BannerTag) error
 }
@@ -53,7 +59,7 @@ func NewBanner(log *slog.Logger, bannerRepo Banners, bannerTagsRepository Banner
 			return
 		}
 
-		log.Info("request body decoded", slog.Any("request", req))
+		log.Info("Request body decoded", slog.Any("request", req))
 		if err := validator.New().Struct(req); err != nil {
 			validateErr := err.(validator.ValidationErrors)
 			log.Error("Invalid request", logerr.Err(err))

@@ -15,7 +15,7 @@ type TagRepo struct {
 	log *slog.Logger
 }
 
-func NewTag(db *pgxpool.Pool, log *slog.Logger) *TagRepo {
+func NewTagRepo(db *pgxpool.Pool, log *slog.Logger) *TagRepo {
 	return &TagRepo{db, log}
 }
 

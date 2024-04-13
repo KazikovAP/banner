@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"banner/internal/config"
-	middlewares "banner/internal/lib/api/middlewares"
+	"banner/internal/lib/api/middlewares"
 	jwt "banner/internal/lib/auth/jwt"
 	logerr "banner/internal/lib/logger/logerr"
 	"banner/internal/repo"
@@ -16,8 +16,8 @@ import (
 	"banner/internal/server/handlers/banners"
 	"banner/internal/server/handlers/features"
 	"banner/internal/server/handlers/tags"
-	login "banner/internal/server/handlers/users/login"
-	users "banner/internal/server/handlers/users/user"
+	"banner/internal/server/handlers/users/login"
+	user "banner/internal/server/handlers/users/user"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -45,13 +45,13 @@ func Run() error {
 	// Setup connect to database
 	db, err := setupConnectToPostgres(cfg, log)
 	if err != nil {
-		log.Error("Failed to connect Postgres", logerr.Err(err))
+		log.Error("Failed to connect Postgres: ", logerr.Err(err))
 		os.Exit(1)
 	}
 	defer db.Close()
 
 	if err := db.Ping(context.Background()); err != nil {
-		log.Error("Failed to ping Postgres", logerr.Err(err))
+		log.Error("Failed to ping Postgres: ", logerr.Err(err))
 		os.Exit(1)
 	} else {
 		log.Info("Connection to Postgres DB successfully")
@@ -67,28 +67,43 @@ func Run() error {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	ftr := repo.NewFeature(db.DB, log)
-	router.Post("/features", features.NewFeature(log, ftr))
-
-	tg := repo.NewTag(db.DB, log)
-	router.Post("/tags", tags.NewTag(log, tg))
-
-	us := repo.NewUser(db.DB, log)
-	router.Post("/users", users.NewUser(log, us))
-
+	ftr := repo.NewFeatureRepo(db.DB, log)
+	tg := repo.NewTagRepo(db.DB, log)
+	us := repo.NewUserRepo(db.DB, log)
+	br := repo.NewBannerRepo(db.DB, log)
+	btr := repo.NewBannerTagRepo(db.DB, log)
 	jwt := jwt.NewJWTSecret(cfg.Jwt.Secret, log)
+
 	router.Post("/login", login.Login(log, us, jwt))
+	router.Post("/users", user.NewUser(log, us))
+
+	router.With(func(next http.Handler) http.Handler {
+		return middlewares.TokenAuthMiddleware(jwt, next)
+	}).Get("/user_banner", banners.GetBannerUser(log, br))
 
 	router.With(func(next http.Handler) http.Handler {
 		return middlewares.TokenAuthMiddleware(jwt, next)
 	}).Post("/tags", tags.NewTag(log, tg))
 
-	br := repo.NewBanner(db.DB, log)
-	btr := repo.NewBannerTag(db.DB, log)
+	router.With(func(next http.Handler) http.Handler {
+		return middlewares.TokenAuthAndRoleMiddleware(jwt, next)
+	}).Post("/features", features.NewFeature(log, ftr))
+
+	router.With(func(next http.Handler) http.Handler {
+		return middlewares.TokenAuthAndRoleMiddleware(jwt, next)
+	}).Get("/banner", banners.GetBanners(br, log))
 
 	router.With(func(next http.Handler) http.Handler {
 		return middlewares.TokenAuthAndRoleMiddleware(jwt, next)
 	}).Post("/banners", banners.NewBanner(log, br, btr))
+
+	router.With(func(next http.Handler) http.Handler {
+		return middlewares.TokenAuthAndRoleMiddleware(jwt, next)
+	}).Patch("/banner/{id}", banners.UpdateBanner(br, log))
+
+	router.With(func(next http.Handler) http.Handler {
+		return middlewares.TokenAuthAndRoleMiddleware(jwt, next)
+	}).Delete("/banner/{id}", banners.DeleteBanner(log, br))
 
 	// Server
 	log.Info("Starting server at", slog.String(cfg.Server.Host, cfg.Server.Port))
@@ -100,7 +115,7 @@ func Run() error {
 		IdleTimeout:  cfg.Server.IdleTimeout,
 	}
 	if err := server.ListenAndServe(); err != nil {
-		log.Error("Failed to start server", logerr.Err(err))
+		log.Error("Failed to start server: ", logerr.Err(err))
 	}
 
 	return nil

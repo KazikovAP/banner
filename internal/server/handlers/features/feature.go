@@ -38,6 +38,7 @@ func NewFeature(log *slog.Logger, featureRepo Features) http.HandlerFunc {
 		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
 			log.Error("Failed to decode request body", logerr.Err(err))
+			render.Status(r, http.StatusBadRequest)
 			render.JSON(w, r, response.Error("Failed to decode request"))
 			return
 		}
@@ -46,6 +47,7 @@ func NewFeature(log *slog.Logger, featureRepo Features) http.HandlerFunc {
 		if err := validator.New().Struct(req); err != nil {
 			validateErr := err.(validator.ValidationErrors)
 			log.Error("Invalid request", logerr.Err(err))
+			render.Status(r, http.StatusBadRequest)
 			render.JSON(w, r, response.ValidationError(validateErr))
 			return
 		}
@@ -54,6 +56,7 @@ func NewFeature(log *slog.Logger, featureRepo Features) http.HandlerFunc {
 		err = featureRepo.CreateFeature(r.Context(), &feature)
 		if err != nil {
 			log.Error("Failed to create feature", logerr.Err(err))
+			render.Status(r, http.StatusBadRequest)
 			render.JSON(w, r, response.Error("Failed to create feature"))
 			return
 		}
