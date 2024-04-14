@@ -22,8 +22,14 @@
 ### Экспорировать путь до конфига
 `export CONFIG_PATH="<path>\banner\config\config.yaml"` 
 
-### Запуск приложения
+### Запуск приложения локально
 `go run cmd/banner/main.go`
+
+### Запуск докер контейнера с Postgres
+`docker compose -p banner -f ./build/docker-compose.yaml up -d`
+
+### Остановка и удаление докер контейнер с Postgres
+`docker compose -p banner -f ./build/docker-compose.yaml down`
 
 ---
 ## Разработал:
