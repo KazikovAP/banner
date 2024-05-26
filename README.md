@@ -33,7 +33,7 @@
 
 ## Примеры запросов
 ### Authorization
-**Регистрация пользователя POST запрос** `http://localhost:8080/auth/sign-up`:
+**Регистрация пользователя:** POST запрос `http://localhost:8080/auth/sign-up`:
 
 **Request:**
 ```JSON
@@ -50,7 +50,7 @@
 }
 ```
 
-**Авторизация пользователя POST запрос** `http://localhost:8080/auth/login`:
+**Авторизация пользователя:** POST запрос `http://localhost:8080/auth/login`:
 
 **Request:**
 ```JSON
@@ -66,7 +66,7 @@
 }
 ```
 
-**Выход пользователя DELETE запрос** `http://localhost:8080/auth/logout`:
+**Выход пользователя:** DELETE запрос `http://localhost:8080/auth/logout`:
 
 **Request:**
 ```JSON
@@ -82,7 +82,7 @@
 ```
 
 ### Banners API
-**Получение всех баннеров GET запрос** `http://localhost:8080/api/banners`:
+**Получение всех баннеров:** GET запрос `http://localhost:8080/api/banners`:
 
 **Request:**
 ```JSON
@@ -138,7 +138,7 @@
 }
 ```
 
-**Получение баннеров по ID GET запрос** `http://localhost:8080/api/banner/feature=5`:
+**Получение баннеров по ID:** GET запрос `http://localhost:8080/api/banner/feature=5`:
 
 **Request:**
 ```JSON
@@ -162,7 +162,7 @@
 }
 ```
 
-**Получение баннеров по ID тега GET запрос** `http://localhost:8080/api/banner/tag=1`:
+**Получение баннеров по ID тега:** GET запрос `http://localhost:8080/api/banner/tag=1`:
 
 **Request:**
 ```JSON
@@ -202,7 +202,7 @@
 }
 ```
 
-**Создание баннера POST запрос** `http://localhost:8080/api/banner`:
+**Создание баннера:** POST запрос `http://localhost:8080/api/banner`:
 
 **Request:**
 ```JSON
@@ -221,7 +221,7 @@
 }
 ```
 
-**Обновление баннера PATCH запрос** `http://localhost:8080/api/updateBanner/5`:
+**Обновление баннера:** PATCH запрос `http://localhost:8080/api/updateBanner/5`:
 
 **Request:**
 ```JSON
@@ -240,7 +240,7 @@
 }
 ```
 
-**Удаление баннера DELETE запрос** `http://localhost:8080/api/deleteByFeature/4`:
+**Удаление баннера:** DELETE запрос `http://localhost:8080/api/deleteByFeature/4`:
 
 **Request:**
 ```JSON
